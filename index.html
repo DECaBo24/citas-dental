@@ -1,0 +1,749 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Agendar Cita — Clínica Dental</title>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,300;0,400;0,600;0,700;1,300;1,400&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --cream: #faf7f2;
+    --warm: #f0e8d8;
+    --border: #ddd0bb;
+    --ink: #1a1208;
+    --ink2: #5a4a32;
+    --ink3: #9a8a72;
+    --teal: #0d6e62;
+    --teal-light: #e0f0ed;
+    --teal-mid: #3a9e8e;
+    --accent: #c85a2a;
+    --gold: #b8860b;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--cream);
+    color: var(--ink);
+    font-family: 'DM Sans', sans-serif;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 40px 16px;
+  }
+
+  /* Background decorative elements */
+  body::before {
+    content: '';
+    position: fixed;
+    top: -200px;
+    right: -200px;
+    width: 600px;
+    height: 600px;
+    background: radial-gradient(circle, rgba(13,110,98,0.06) 0%, transparent 70%);
+    pointer-events: none;
+  }
+
+  body::after {
+    content: '';
+    position: fixed;
+    bottom: -150px;
+    left: -150px;
+    width: 500px;
+    height: 500px;
+    background: radial-gradient(circle, rgba(200,90,42,0.05) 0%, transparent 70%);
+    pointer-events: none;
+  }
+
+  .page {
+    width: 100%;
+    max-width: 520px;
+    position: relative;
+    z-index: 1;
+  }
+
+  /* Header */
+  .header {
+    text-align: center;
+    margin-bottom: 40px;
+    animation: fadeDown 0.6s ease both;
+  }
+
+  .logo {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 24px;
+  }
+
+  .logo-tooth {
+    width: 44px;
+    height: 44px;
+    background: var(--teal);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 22px;
+  }
+
+  .logo-name {
+    font-family: 'Fraunces', serif;
+    font-size: 20px;
+    font-weight: 600;
+    color: var(--teal);
+    letter-spacing: -0.02em;
+  }
+
+  h1 {
+    font-family: 'Fraunces', serif;
+    font-size: clamp(32px, 6vw, 44px);
+    font-weight: 300;
+    line-height: 1.1;
+    letter-spacing: -0.03em;
+    color: var(--ink);
+    margin-bottom: 12px;
+  }
+
+  h1 em {
+    font-style: italic;
+    color: var(--teal);
+  }
+
+  .header-sub {
+    font-size: 14px;
+    color: var(--ink3);
+    font-weight: 400;
+    line-height: 1.6;
+  }
+
+  /* Card */
+  .card {
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: 24px;
+    padding: 40px;
+    box-shadow: 0 4px 24px rgba(26,18,8,0.06), 0 1px 0 var(--border);
+    animation: fadeUp 0.5s 0.1s ease both;
+  }
+
+  /* Steps indicator */
+  .steps {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0;
+    margin-bottom: 36px;
+  }
+
+  .step-dot {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    font-weight: 600;
+    transition: all 0.3s;
+    flex-shrink: 0;
+  }
+
+  .step-dot.active { background: var(--teal); color: #fff; }
+  .step-dot.done { background: var(--teal-light); color: var(--teal); }
+  .step-dot.pending { background: var(--warm); color: var(--ink3); border: 1px solid var(--border); }
+
+  .step-line {
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+    max-width: 60px;
+    transition: background 0.3s;
+  }
+
+  .step-line.done { background: var(--teal-mid); }
+
+  /* Form steps */
+  .form-step { display: none; }
+  .form-step.active { display: block; animation: fadeIn 0.3s ease; }
+
+  .step-label {
+    font-family: 'Fraunces', serif;
+    font-size: 20px;
+    font-weight: 400;
+    color: var(--ink);
+    margin-bottom: 6px;
+    letter-spacing: -0.02em;
+  }
+
+  .step-hint {
+    font-size: 13px;
+    color: var(--ink3);
+    margin-bottom: 24px;
+    line-height: 1.5;
+  }
+
+  /* Form fields */
+  .field {
+    margin-bottom: 18px;
+  }
+
+  label {
+    display: block;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--ink2);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    margin-bottom: 7px;
+  }
+
+  input, select, textarea {
+    width: 100%;
+    padding: 12px 16px;
+    background: var(--cream);
+    border: 1.5px solid var(--border);
+    border-radius: 12px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 15px;
+    color: var(--ink);
+    transition: all 0.2s;
+    outline: none;
+    appearance: none;
+  }
+
+  input:focus, select:focus, textarea:focus {
+    border-color: var(--teal);
+    background: #fff;
+    box-shadow: 0 0 0 3px rgba(13,110,98,0.08);
+  }
+
+  input::placeholder { color: var(--ink3); }
+
+  select {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%239a8a72' stroke-width='2'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 14px center;
+    padding-right: 40px;
+    cursor: pointer;
+  }
+
+  select:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  /* Phone hint */
+  .field-hint {
+    font-size: 11px;
+    color: var(--ink3);
+    margin-top: 5px;
+  }
+
+  /* Slot loading */
+  .slots-loading {
+    display: none;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    color: var(--teal);
+    padding: 10px 0;
+  }
+
+  .slots-loading.visible { display: flex; }
+
+  .spinner {
+    width: 16px;
+    height: 16px;
+    border: 2px solid var(--teal-light);
+    border-top-color: var(--teal);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+  }
+
+  .no-slots {
+    display: none;
+    font-size: 13px;
+    color: var(--accent);
+    padding: 10px 14px;
+    background: #fdf0eb;
+    border-radius: 8px;
+    border: 1px solid #f0c8b0;
+  }
+
+  .no-slots.visible { display: block; }
+
+  /* Buttons */
+  .btn-primary {
+    width: 100%;
+    padding: 14px;
+    background: var(--teal);
+    color: #fff;
+    border: none;
+    border-radius: 12px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    margin-top: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+  }
+
+  .btn-primary:hover { background: #0a5a50; transform: translateY(-1px); box-shadow: 0 4px 16px rgba(13,110,98,0.2); }
+  .btn-primary:active { transform: translateY(0); }
+  .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; transform: none; box-shadow: none; }
+
+  .btn-back {
+    background: none;
+    border: none;
+    color: var(--ink3);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px;
+    cursor: pointer;
+    padding: 8px 0;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 20px;
+    transition: color 0.2s;
+  }
+
+  .btn-back:hover { color: var(--ink); }
+
+  /* Summary card */
+  .summary {
+    background: var(--teal-light);
+    border: 1px solid rgba(13,110,98,0.2);
+    border-radius: 16px;
+    padding: 20px;
+    margin-bottom: 24px;
+  }
+
+  .summary-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 6px 0;
+    font-size: 14px;
+    border-bottom: 1px solid rgba(13,110,98,0.1);
+  }
+
+  .summary-row:last-child { border-bottom: none; }
+  .summary-label { color: var(--teal); font-weight: 500; }
+  .summary-value { color: var(--ink); font-weight: 600; }
+
+  /* Success */
+  .success-screen {
+    display: none;
+    text-align: center;
+    padding: 20px 0;
+    animation: fadeIn 0.4s ease;
+  }
+
+  .success-screen.visible { display: block; }
+
+  .success-icon {
+    width: 72px;
+    height: 72px;
+    background: var(--teal);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 32px;
+    margin: 0 auto 20px;
+    animation: popIn 0.5s cubic-bezier(.34,1.56,.64,1) both;
+  }
+
+  .success-title {
+    font-family: 'Fraunces', serif;
+    font-size: 26px;
+    font-weight: 400;
+    color: var(--ink);
+    margin-bottom: 8px;
+    letter-spacing: -0.02em;
+  }
+
+  .success-sub {
+    font-size: 14px;
+    color: var(--ink3);
+    line-height: 1.6;
+    max-width: 300px;
+    margin: 0 auto 24px;
+  }
+
+  .telegram-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: #e8f4fd;
+    border: 1px solid #b8d8f0;
+    color: #1d6fa4;
+    padding: 10px 16px;
+    border-radius: 10px;
+    font-size: 13px;
+    font-weight: 500;
+  }
+
+  /* Footer */
+  .footer {
+    text-align: center;
+    margin-top: 24px;
+    font-size: 12px;
+    color: var(--ink3);
+    animation: fadeUp 0.4s 0.3s ease both;
+  }
+
+  .footer span { color: var(--teal); font-weight: 500; }
+
+  /* Divider */
+  .divider {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin: 20px 0;
+  }
+
+  .divider-line { flex: 1; height: 1px; background: var(--border); }
+  .divider-text { font-size: 11px; color: var(--ink3); letter-spacing: 0.06em; text-transform: uppercase; }
+
+  /* Animations */
+  @keyframes fadeDown { from { opacity: 0; transform: translateY(-16px); } to { opacity: 1; transform: translateY(0); } }
+  @keyframes fadeUp { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
+  @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  @keyframes popIn { from { transform: scale(0); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+
+  /* Mobile */
+  @media (max-width: 480px) {
+    .card { padding: 28px 20px; }
+  }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <div class="header">
+    <div class="logo">
+      <div class="logo-tooth">🦷</div>
+      <div class="logo-name">Clínica Dental</div>
+    </div>
+    <h1>Agenda tu<br><em>cita dental</em></h1>
+    <p class="header-sub">Selecciona fecha y horario disponible.<br>Recibirás confirmación por Telegram.</p>
+  </div>
+
+  <div class="card">
+
+    <!-- Steps indicator -->
+    <div class="steps" id="steps-indicator">
+      <div class="step-dot active" id="dot-1">1</div>
+      <div class="step-line" id="line-1"></div>
+      <div class="step-dot pending" id="dot-2">2</div>
+      <div class="step-line" id="line-2"></div>
+      <div class="step-dot pending" id="dot-3">3</div>
+    </div>
+
+    <!-- Step 1: Fecha y horario -->
+    <div class="form-step active" id="step-1">
+      <div class="step-label">¿Cuándo quieres venir?</div>
+      <p class="step-hint">Elige una fecha para ver los horarios disponibles en tiempo real.</p>
+
+      <div class="field">
+        <label>Fecha de la cita</label>
+        <input type="date" id="fecha" min="" onchange="cargarSlots(this.value)">
+      </div>
+
+      <div class="slots-loading" id="slots-loading">
+        <div class="spinner"></div>
+        Buscando horarios disponibles...
+      </div>
+
+      <div class="no-slots" id="no-slots">
+        😔 No hay horarios disponibles para este día. Prueba con otra fecha.
+      </div>
+
+      <div class="field" id="horario-field" style="display:none">
+        <label>Horario disponible</label>
+        <select id="horario">
+          <option value="">Selecciona un horario</option>
+        </select>
+      </div>
+
+      <button class="btn-primary" id="btn-step1" onclick="goStep2()" disabled>
+        Continuar →
+      </button>
+    </div>
+
+    <!-- Step 2: Datos del paciente -->
+    <div class="form-step" id="step-2">
+      <button class="btn-back" onclick="goStep(1)">← Volver</button>
+      <div class="step-label">Tus datos</div>
+      <p class="step-hint">Necesitamos algunos datos para confirmar tu cita.</p>
+
+      <div class="field">
+        <label>Nombre completo</label>
+        <input type="text" id="nombre" placeholder="Ej. María García" oninput="validateStep2()">
+      </div>
+
+      <div class="field">
+        <label>Teléfono de Telegram</label>
+        <input type="tel" id="telefono" placeholder="521XXXXXXXXXX" oninput="validateStep2()">
+        <div class="field-hint">📱 Incluye código de país. Ej: 521 + 10 dígitos para México</div>
+      </div>
+
+      <div class="field">
+        <label>Motivo de consulta</label>
+        <select id="motivo" onchange="validateStep2()">
+          <option value="">Selecciona el motivo</option>
+          <option>Limpieza dental</option>
+          <option>Revisión general</option>
+          <option>Extracción</option>
+          <option>Ortodoncia</option>
+          <option>Blanqueamiento</option>
+          <option>Otro</option>
+        </select>
+      </div>
+
+      <button class="btn-primary" id="btn-step2" onclick="goStep3()" disabled>
+        Revisar cita →
+      </button>
+    </div>
+
+    <!-- Step 3: Confirmación -->
+    <div class="form-step" id="step-3">
+      <button class="btn-back" onclick="goStep(2)">← Volver</button>
+      <div class="step-label">Confirma tu cita</div>
+      <p class="step-hint">Revisa los detalles antes de agendar.</p>
+
+      <div class="summary" id="summary">
+        <div class="summary-row">
+          <span class="summary-label">📅 Fecha</span>
+          <span class="summary-value" id="sum-fecha">—</span>
+        </div>
+        <div class="summary-row">
+          <span class="summary-label">🕙 Horario</span>
+          <span class="summary-value" id="sum-hora">—</span>
+        </div>
+        <div class="summary-row">
+          <span class="summary-label">👤 Paciente</span>
+          <span class="summary-value" id="sum-nombre">—</span>
+        </div>
+        <div class="summary-row">
+          <span class="summary-label">🦷 Motivo</span>
+          <span class="summary-value" id="sum-motivo">—</span>
+        </div>
+        <div class="summary-row">
+          <span class="summary-label">📱 Telegram</span>
+          <span class="summary-value" id="sum-tel">—</span>
+        </div>
+      </div>
+
+      <button class="btn-primary" id="btn-confirmar" onclick="agendarCita()">
+        ✅ Confirmar cita
+      </button>
+    </div>
+
+    <!-- Success -->
+    <div class="success-screen" id="success">
+      <div class="success-icon">✓</div>
+      <div class="success-title">¡Cita agendada!</div>
+      <p class="success-sub">Tu cita ha sido registrada exitosamente. Recibirás un mensaje de confirmación en Telegram.</p>
+      <div class="telegram-badge">
+        <span>📱</span>
+        Revisa tu Telegram — te llegará la confirmación en breve
+      </div>
+      <div class="divider" style="margin-top:24px;">
+        <div class="divider-line"></div>
+        <div class="divider-text">¿otra cita?</div>
+        <div class="divider-line"></div>
+      </div>
+      <button class="btn-primary" onclick="resetForm()" style="margin-top:0">
+        Agendar otra cita
+      </button>
+    </div>
+
+  </div><!-- /card -->
+
+  <div class="footer">
+    Powered by <span>n8n + Google Calendar + Telegram</span> · Sistema automatizado
+  </div>
+
+</div>
+
+<script>
+  // ─── CONFIGURACIÓN ───────────────────────────────────────────
+  const N8N_SLOTS_URL = 'https://pedroperez15.app.n8n.cloud/webhook/slots-disponibles';
+  const N8N_AGENDAR_URL = 'https://pedroperez15.app.n8n.cloud/webhook/agendar-cita';
+  // ─────────────────────────────────────────────────────────────
+
+  let currentStep = 1;
+
+  // Set min date to today
+  const today = new Date().toISOString().split('T')[0];
+  document.getElementById('fecha').min = today;
+
+  async function cargarSlots(fecha) {
+    if (!fecha) return;
+
+    const select = document.getElementById('horario');
+    const loading = document.getElementById('slots-loading');
+    const noSlots = document.getElementById('no-slots');
+    const horarioField = document.getElementById('horario-field');
+    const btn = document.getElementById('btn-step1');
+
+    // Reset
+    select.innerHTML = '<option value="">Selecciona un horario</option>';
+    horarioField.style.display = 'none';
+    noSlots.classList.remove('visible');
+    btn.disabled = true;
+
+    // Show loading
+    loading.classList.add('visible');
+
+    try {
+      const res = await fetch(`${N8N_SLOTS_URL}?fecha=${fecha}`);
+      const data = await res.json();
+      loading.classList.remove('visible');
+
+      const slots = data[0]?.slotsLibres || data.slotsLibres || [];
+
+      if (!slots || slots.length === 0) {
+        noSlots.classList.add('visible');
+        return;
+      }
+
+      slots.forEach(slot => {
+        const opt = document.createElement('option');
+        opt.value = slot.value;
+        opt.textContent = slot.label;
+        select.appendChild(opt);
+      });
+
+      horarioField.style.display = 'block';
+      select.addEventListener('change', () => {
+        btn.disabled = !select.value;
+      });
+
+    } catch (err) {
+      loading.classList.remove('visible');
+      noSlots.textContent = '⚠️ Error al cargar horarios. Intenta de nuevo.';
+      noSlots.classList.add('visible');
+    }
+  }
+
+  function goStep2() {
+    const fecha = document.getElementById('fecha').value;
+    const horario = document.getElementById('horario').value;
+    if (!fecha || !horario) return;
+    goStep(2);
+  }
+
+  function goStep3() {
+    const nombre = document.getElementById('nombre').value.trim();
+    const tel = document.getElementById('telefono').value.trim();
+    const motivo = document.getElementById('motivo').value;
+    if (!nombre || !tel || !motivo) return;
+
+    // Fill summary
+    const fecha = document.getElementById('fecha').value;
+    const fechaDate = new Date(fecha + 'T12:00:00');
+    const fechaStr = fechaDate.toLocaleDateString('es-MX', {weekday:'long', year:'numeric', month:'long', day:'numeric'});
+    const horaLabel = document.getElementById('horario').options[document.getElementById('horario').selectedIndex].text;
+
+    document.getElementById('sum-fecha').textContent = fechaStr;
+    document.getElementById('sum-hora').textContent = horaLabel;
+    document.getElementById('sum-nombre').textContent = nombre;
+    document.getElementById('sum-motivo').textContent = motivo;
+    document.getElementById('sum-tel').textContent = tel;
+
+    goStep(3);
+  }
+
+  function goStep(n) {
+    document.getElementById(`step-${currentStep}`).classList.remove('active');
+    currentStep = n;
+    document.getElementById(`step-${n}`).classList.add('active');
+    updateStepIndicator();
+    window.scrollTo({top: 0, behavior: 'smooth'});
+  }
+
+  function updateStepIndicator() {
+    for (let i = 1; i <= 3; i++) {
+      const dot = document.getElementById(`dot-${i}`);
+      if (i < currentStep) {
+        dot.className = 'step-dot done';
+        dot.textContent = '✓';
+      } else if (i === currentStep) {
+        dot.className = 'step-dot active';
+        dot.textContent = i;
+      } else {
+        dot.className = 'step-dot pending';
+        dot.textContent = i;
+      }
+      if (i < 3) {
+        document.getElementById(`line-${i}`).className = i < currentStep ? 'step-line done' : 'step-line';
+      }
+    }
+  }
+
+  function validateStep2() {
+    const nombre = document.getElementById('nombre').value.trim();
+    const tel = document.getElementById('telefono').value.trim();
+    const motivo = document.getElementById('motivo').value;
+    document.getElementById('btn-step2').disabled = !(nombre && tel && motivo);
+  }
+
+  async function agendarCita() {
+    const btn = document.getElementById('btn-confirmar');
+    btn.disabled = true;
+    btn.innerHTML = '<div class="spinner" style="border-color:rgba(255,255,255,0.3);border-top-color:#fff"></div> Agendando...';
+
+    const payload = {
+      nombre: document.getElementById('nombre').value.trim(),
+      telefono: document.getElementById('telefono').value.trim(),
+      fecha: document.getElementById('fecha').value,
+      hora: document.getElementById('horario').value,
+      motivo: document.getElementById('motivo').value
+    };
+
+    try {
+      await fetch(N8N_AGENDAR_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+
+      // Show success
+      document.getElementById('step-3').classList.remove('active');
+      document.getElementById('steps-indicator').style.display = 'none';
+      document.getElementById('success').classList.add('visible');
+
+    } catch (err) {
+      btn.disabled = false;
+      btn.innerHTML = '✅ Confirmar cita';
+      alert('Error al agendar. Intenta de nuevo.');
+    }
+  }
+
+  function resetForm() {
+    document.getElementById('success').classList.remove('visible');
+    document.getElementById('steps-indicator').style.display = 'flex';
+    document.getElementById('fecha').value = '';
+    document.getElementById('nombre').value = '';
+    document.getElementById('telefono').value = '';
+    document.getElementById('motivo').value = '';
+    document.getElementById('horario').innerHTML = '<option value="">Selecciona un horario</option>';
+    document.getElementById('horario-field').style.display = 'none';
+    document.getElementById('btn-step1').disabled = true;
+    currentStep = 1;
+    document.getElementById('step-1').classList.add('active');
+    updateStepIndicator();
+  }
+</script>
+</body>
+</html>
