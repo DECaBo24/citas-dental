@@ -586,7 +586,10 @@ const N8N_AGENDAR_URL = 'https://diegocameros24.app.n8n.cloud/webhook/agendar-ci
   // Set min date to today
   const today = new Date().toISOString().split('T')[0];
   document.getElementById('fecha').min = today;
-
+  
+// Leer chatId de la URL automáticamente
+const urlParams = new URLSearchParams(window.location.search);
+const chatIdFromUrl = urlParams.get('chatId') || '';
   async function cargarSlots(fecha) {
     if (!fecha) return;
 
@@ -704,12 +707,12 @@ const N8N_AGENDAR_URL = 'https://diegocameros24.app.n8n.cloud/webhook/agendar-ci
     btn.innerHTML = '<div class="spinner" style="border-color:rgba(255,255,255,0.3);border-top-color:#fff"></div> Agendando...';
 
     const payload = {
-      nombre: document.getElementById('nombre').value.trim(),
-      telefono: document.getElementById('telefono').value.trim(),
-      fecha: document.getElementById('fecha').value,
-      hora: document.getElementById('horario').value,
-      motivo: document.getElementById('motivo').value
-    };
+   nombre: document.getElementById('nombre').value.trim(),
+   chatId: chatIdFromUrl,
+   fecha: document.getElementById('fecha').value,
+   hora: document.getElementById('horario').value,
+   motivo: document.getElementById('motivo').value
+};
 
     try {
       await fetch(N8N_AGENDAR_URL, {
